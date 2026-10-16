@@ -1,0 +1,3 @@
+# This file keeps the data/checkpoints/ directory in Git.
+# Crawler run checkpoints are generated during pipeline execution (Phase A).
+# Checkpoints are excluded by .gitignore.

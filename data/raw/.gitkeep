@@ -1,0 +1,3 @@
+# This file keeps the data/raw/ directory in Git.
+# Generated crawler output (eureka_website_data.json) is excluded by .gitignore.
+# Run the crawler pipeline (Phase A) to populate this directory.

@@ -1,0 +1,26 @@
+# Development dependencies for Eureka RAG Chatbot — Phase 0 and beyond
+#
+# Install with:
+#   pip install -r requirements-dev.txt
+#
+# These are tools used during development, testing, and linting.
+# They are NOT required by the deployed application.
+#
+# NOTE: Install this AFTER activating a virtual environment:
+#   python -m venv .venv
+#   .\.venv\Scripts\activate          # Windows PowerShell
+#   source .venv/bin/activate         # Linux / macOS
+#   pip install -r requirements-dev.txt
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+pytest>=7.4,<9.0
+pytest-cov>=4.1,<6.0
+
+# ─── Linting and formatting ───────────────────────────────────────────────────
+ruff>=0.4,<1.0
+
+# ─── Type checking ────────────────────────────────────────────────────────────
+mypy>=1.8,<2.0
+
+# ─── Environment loading (used across dev scripts) ────────────────────────────
+python-dotenv>=1.0,<2.0

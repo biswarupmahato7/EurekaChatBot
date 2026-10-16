@@ -1,0 +1,33 @@
+# Backend dependencies for Eureka RAG Chatbot
+#
+# STATUS: Phase 0 stub — these dependencies are declared for future phases.
+# Do NOT install this file during Phase 0 as it is not needed for the
+# crawler smoke tests and will add unnecessary weight to the environment.
+#
+# Install during Phase B/C:
+#   pip install -r backend/requirements.txt
+#
+# Python version requirement: 3.11 or newer
+#
+# ─── Web framework (Phase C) ──────────────────────────────────────────────────
+fastapi>=0.111,<1.0
+uvicorn[standard]>=0.29,<1.0
+
+# ─── Vector database (Phase B) ────────────────────────────────────────────────
+chromadb>=0.5,<1.0
+
+# ─── Embeddings (Phase B) ─────────────────────────────────────────────────────
+sentence-transformers>=3.0,<4.0
+
+# ─── Groq LLM client (Phase C) ────────────────────────────────────────────────
+# Use the official Groq Python SDK.
+# Verify the supported model ID from https://console.groq.com/docs/models
+# at deployment time — model availability and names can change.
+groq>=0.9,<1.0
+
+# ─── Schema validation (shared with crawler) ──────────────────────────────────
+pydantic>=2.5,<3.0
+pydantic-settings>=2.2,<3.0
+
+# ─── Environment configuration ────────────────────────────────────────────────
+python-dotenv>=1.0,<2.0

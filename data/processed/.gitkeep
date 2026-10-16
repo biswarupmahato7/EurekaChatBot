@@ -1,0 +1,3 @@
+# This file keeps the data/processed/ directory in Git.
+# Generated chunk output (eureka_website_chunks.json) is excluded by .gitignore.
+# Run the chunker pipeline (Phase A) to populate this directory.

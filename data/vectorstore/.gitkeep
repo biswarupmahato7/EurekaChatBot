@@ -1,0 +1,4 @@
+# This file keeps the data/vectorstore/ directory in Git.
+# The populated ChromaDB index is excluded by .gitignore.
+# Rebuild the index from data/processed/eureka_website_chunks.json
+# using the build_index.py script (Phase B).

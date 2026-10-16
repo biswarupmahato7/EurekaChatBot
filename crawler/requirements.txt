@@ -1,0 +1,41 @@
+# Crawler dependencies for Eureka RAG Chatbot
+#
+# Python version requirement: 3.11 or newer
+#
+# Install with:
+#   pip install -r crawler/requirements.txt
+#
+# These are the ONLY dependencies needed to run and test the crawler.
+# No Groq API key, embedding API key, vector database, or running backend
+# is required to install or test the crawler.
+#
+# TOKENIZER NOTE:
+#   tiktoken is used for token counting during chunking and validation.
+#   The same tiktoken encoding (configured via TOKENIZER env var, default:
+#   cl100k_base) MUST be used consistently throughout the pipeline:
+#   during chunking, validation, and any downstream token budget checks.
+#   Token counts are encoding-dependent and will differ between encodings
+#   or other tokenizers (e.g., HuggingFace tokenizers). Do not mix tokenizers.
+
+# ─── HTTP retrieval ───────────────────────────────────────────────────────────
+requests>=2.31,<3.0
+
+# ─── HTML parsing ─────────────────────────────────────────────────────────────
+beautifulsoup4>=4.12,<5.0
+# lxml is an optional but recommended faster parser for BeautifulSoup
+lxml>=5.1,<6.0
+
+# ─── Schema validation ────────────────────────────────────────────────────────
+pydantic>=2.5,<3.0
+
+# ─── Token counting ───────────────────────────────────────────────────────────
+# tiktoken is the initial tokenizer. See TOKENIZER NOTE above.
+tiktoken>=0.6,<1.0
+
+# ─── Environment configuration ────────────────────────────────────────────────
+python-dotenv>=1.0,<2.0
+
+# ─── Testing (crawler-specific) ───────────────────────────────────────────────
+# Note: pytest is also listed in requirements-dev.txt at the project root.
+# Install from requirements-dev.txt for the full development setup.
+pytest>=7.4,<9.0
