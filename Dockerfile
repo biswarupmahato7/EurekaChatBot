@@ -20,6 +20,10 @@ COPY backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Pre-download and cache embedding model weights in build stage
+ENV HF_HOME=/opt/hf_cache
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+
 # ── Runtime Stage ────────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
@@ -34,10 +38,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd -g 10001 appgroup && \
     useradd -u 10001 -g appgroup -s /sbin/nologin -d /app appuser
 
-# Copy virtual environment from builder
+# Copy virtual environment and model cache from builder
 COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-ENV PYTHONPATH=/app
+COPY --from=builder /opt/hf_cache /opt/hf_cache
+
+# Strict memory and thread-pool limits to fit within 512MB RAM free-tier ceilings
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH=/app \
+    HF_HOME=/opt/hf_cache \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    VECLIB_MAXIMUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false \
+    PYTHONMALLOC=malloc \
+    WEB_CONCURRENCY=1
 
 # Create required persistent data directories with non-root ownership
 RUN mkdir -p /app/data/vectorstore \
@@ -73,5 +89,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # Configure bootstrap entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-# Launch production server with Uvicorn (supports dynamic PORT on Railway/Render/cloud platforms)
-CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --proxy-headers --forwarded-allow-ips '*'"]
+# Launch production server with Uvicorn (uses WEB_CONCURRENCY=1 to prevent OOM on 512MB RAM)
+CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-1} --proxy-headers --forwarded-allow-ips '*'"]
+

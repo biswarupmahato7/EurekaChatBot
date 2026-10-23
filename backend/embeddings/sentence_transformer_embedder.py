@@ -82,7 +82,18 @@ class SentenceTransformerEmbedder(BaseEmbedder):
             ) from exc
 
         try:
+            try:
+                import torch
+                torch.set_num_threads(1)
+                try:
+                    torch.set_num_interop_threads(1)
+                except RuntimeError:
+                    pass
+            except Exception:
+                pass
+
             model = SentenceTransformer(self.model_name, device=self.device)
+
             # Verify actual dimension
             test_dim = model.get_sentence_embedding_dimension()
             if test_dim:
