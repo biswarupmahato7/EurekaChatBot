@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://YOUR_RAILWAY_BACKEND_URL.up.railway.app/api/:match*"
+      "destination": "https://eurekachatbot.onrender.com/api/:match*"
     },
     {
       "source": "/health/:match*",
-      "destination": "https://YOUR_RAILWAY_BACKEND_URL.up.railway.app/health/:match*"
+      "destination": "https://eurekachatbot.onrender.com/health/:match*"
     }
   ]
 }
