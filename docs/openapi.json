@@ -1,0 +1,296 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Eureka RAG Chatbot Backend",
+    "description": "FastAPI service for grounded QA over the Eureka Solutions website corpus.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Process Liveness Check",
+        "description": "Indicates that the HTTP process is running. Fast, performs no slow external calls.",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Live Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Application Readiness Check",
+        "description": "Verifies vector store availability and collection readiness before traffic is routed.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Ready Health Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Ask Eureka Solutions Chatbot",
+        "description": "Submit a user inquiry to receive a grounded answer with citations extracted from the Eureka Solutions website corpus.",
+        "operationId": "chat_endpoint_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Grounded response, conversational fallback, or scope notification.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or validation error."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "503": {
+            "description": "Temporary service unavailability (retrieval or LLM dependency).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "description": "The visitor's question text (max 2,000 characters)."
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Optional opaque client session ID for client-side state correlation."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Language",
+            "description": "Target language or 'auto' to preserve the language of the inquiry.",
+            "default": "auto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest",
+        "description": "Incoming user chat inquiry."
+      },
+      "ChatResponse": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Unique server-generated request correlation identifier."
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "description": "Grounded answer text or polite fallback message."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ChatStatus",
+            "description": "Logical resolution status."
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceItem"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "List of verified, non-duplicate citations from retrieved website metadata."
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Optional operational or contextual notification."
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "answer",
+          "status"
+        ],
+        "title": "ChatResponse",
+        "description": "Standardized response from the chat endpoint."
+      },
+      "ChatStatus": {
+        "type": "string",
+        "enum": [
+          "answered",
+          "insufficient_evidence",
+          "out_of_scope",
+          "temporarily_unavailable"
+        ],
+        "title": "ChatStatus",
+        "description": "Stable logical statuses for chatbot responses."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SourceItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Title of the source webpage or section"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Canonical or source URL within the approved website scope"
+          },
+          "snippet": {
+            "type": "string",
+            "title": "Snippet",
+            "description": "Grounded source text excerpt supporting the claim"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "url",
+          "snippet"
+        ],
+        "title": "SourceItem",
+        "description": "A grounded citation reference pointing to an approved website page."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

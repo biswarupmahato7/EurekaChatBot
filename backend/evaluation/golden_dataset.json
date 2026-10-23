@@ -1,0 +1,172 @@
+{
+  "dataset_name": "Eureka RAG Golden Retrieval Evaluation Set",
+  "dataset_type": "live",
+  "schema_version": "1.0",
+  "source_data_file": "data/processed/eureka_website_chunks.json",
+  "queries": [
+    {
+      "eval_id": "eval_01",
+      "question": "Offshore Development Center (ODC) engineering team models",
+      "expected_page_ids": [
+        "ed9195c3c8ffb8dc66838aaddd615654a7947022ccbf981a8ce7a2762cebce6f"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/dedicated-engineering-teams/offshore-development-center"
+      ],
+      "reason": "Direct inquiry on ODC setup, engineering governance, and dedicated staffing models.",
+      "category": "exact_phrase",
+      "dataset_type": "live",
+      "notes": "Tests exact technical and service terminology matching."
+    },
+    {
+      "eval_id": "eval_02",
+      "question": "How can Eureka Solutions help modernize legacy enterprise applications and integrate with cloud platforms?",
+      "expected_page_ids": [
+        "646d718e9983efa1f6ea639af2359ee52e97c0fe59353d250b4413e81a5f2042"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/system-integration/legacy-application-modernization"
+      ],
+      "reason": "Legacy application modernization service page details refactoring, re-platforming, and cloud migration strategies.",
+      "category": "conversational",
+      "dataset_type": "live",
+      "notes": "Tests conversational query understanding against enterprise service pages."
+    },
+    {
+      "eval_id": "eval_03",
+      "question": "What outcomes were achieved in the Municipality WhatsApp Service Bot project?",
+      "expected_page_ids": [
+        "10dbba5bf086a8432d23344eeef5a627115534ccfc8f0e6ae92264139fac35cd"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/case-studies/municipality-whatsapp-service-bot"
+      ],
+      "reason": "Case study specifically details the WhatsApp bot deployment for municipal citizen services and grievance tracking.",
+      "category": "case_study",
+      "dataset_type": "live",
+      "notes": "Tests named case study retrieval with public sector automation context."
+    },
+    {
+      "eval_id": "eval_04",
+      "question": "Microfinence core bankng platform lending software",
+      "expected_page_ids": [
+        "b657b0d021dc62c1f4f04207d467ba118ee172381ad0cc997f60e4c54d3ce9cf"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/case-studies/microfinance-core-banking"
+      ],
+      "reason": "Case study covers microfinance loan origination, repayment tracking, and core banking platform implementation.",
+      "category": "typo_variation",
+      "dataset_type": "live",
+      "notes": "Contains realistic typos ('Microfinence', 'bankng') to test dense embedding typo-resilience."
+    },
+    {
+      "eval_id": "eval_05",
+      "question": "Microsoft Power Automate workflow automation and RPA bot solutions",
+      "expected_page_ids": [
+        "bc2eed74dce7b606b713d045921cde79976e9f5e51b5f1c2bad25f3e97446719"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/microsoft-solutions/power-automate-solutions"
+      ],
+      "reason": "Microsoft solutions page detailing Power Automate, cloud flows, and RPA bot automation.",
+      "category": "specific_section",
+      "dataset_type": "live",
+      "notes": "Tests retrieval of a specific named technology stack page."
+    },
+    {
+      "eval_id": "eval_06",
+      "question": "Software to calculate employee salaries, tax deductions, attendance records, and pay slips",
+      "expected_page_ids": [
+        "edf7bcf6c1333ecfef9546a7059d41c283e6b837bfd3b6953d17a197e659f849"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/enterprise-software/hr-payroll-solutions"
+      ],
+      "reason": "HR & Payroll solutions page covers salary computation, payroll compliance, tax deductions, and attendance tracking.",
+      "category": "semantic_concept",
+      "dataset_type": "live",
+      "notes": "Tests semantic concept retrieval where title does not appear in the query verbatim."
+    },
+    {
+      "eval_id": "eval_07",
+      "question": "Cement industry ESG compliance, carbon emissions tracking, and sustainability reporting portal",
+      "expected_page_ids": [
+        "5fbc531f9499c4b3227e7735cba4bd39160cfadfa49e4910e0371b9bfd39b86e"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/case-studies/cement-esg-sustainability-portal"
+      ],
+      "reason": "Case study details ESG and sustainability portal engineered for cement manufacturing operations.",
+      "category": "case_study",
+      "dataset_type": "live",
+      "notes": "Tests domain-specific ESG manufacturing use case matching."
+    },
+    {
+      "eval_id": "eval_08",
+      "question": "Autonomous AI agents, agentic workflows, and multi-agent system integration",
+      "expected_page_ids": [
+        "8e85bba5462046c8461a6164b2a97c6e3515da6cc06086e959a462bd44deec1d"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/ai-intelligent-automation/agentic-ai-solutions"
+      ],
+      "reason": "Agentic AI solutions page details agentic architectures, autonomous task execution, and enterprise AI agents.",
+      "category": "emerging_tech",
+      "dataset_type": "live",
+      "notes": "Tests emerging AI technology queries against specialized service capabilities."
+    },
+    {
+      "eval_id": "eval_09",
+      "question": "Executive KPI dashboards, real-time management reporting, and business intelligence",
+      "expected_page_ids": [
+        "d01fc5f62dafd3985f00fdf08c1ff0fe263c58b48579353c96f0f01bde7d3e29"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/services/business-intelligence-analytics/executive-dashboards"
+      ],
+      "reason": "Executive Dashboards service page describes C-suite metrics, KPI visualizations, and automated MIS reporting.",
+      "category": "bi_reporting",
+      "dataset_type": "live",
+      "notes": "Tests BI analytics and KPI reporting semantic alignment."
+    },
+    {
+      "eval_id": "eval_10",
+      "question": "Portals for patient appointment scheduling, telemedicine, and healthcare provider workflows",
+      "expected_page_ids": [
+        "15c64a3c15295e0d8d47cc14a13d2972357095ad599412b483ac88e18e2af366"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/industries/healthcare/patient-provider-portals"
+      ],
+      "reason": "Healthcare portal page details patient onboarding, doctor scheduling, and telehealth integration.",
+      "category": "healthcare_portal",
+      "dataset_type": "live",
+      "notes": "Tests healthcare domain-specific portal retrieval."
+    },
+    {
+      "eval_id": "eval_11",
+      "question": "Central bank electronic document management system eDMS workflow modernization",
+      "expected_page_ids": [
+        "d8585778b122387501571e66a8f3a0e7683ffbe1bd3ece990f6ae80fed47aa3a"
+      ],
+      "expected_urls": [
+        "https://eurekasolutions.in/Eureka2026/case-studies/central-bank-edms-modernisation"
+      ],
+      "reason": "Case study details central bank document workflow and digitization project.",
+      "category": "case_study",
+      "dataset_type": "live",
+      "notes": "Tests banking regulatory eDMS document modernization."
+    },
+    {
+      "eval_id": "eval_12",
+      "question": "Cryogenic liquid helium dilution refrigeration for quantum superconducting qubits",
+      "expected_page_ids": [],
+      "expected_urls": [],
+      "reason": "Completely out-of-corpus query designed to test retrieval behavior on unsupported topics without hallucination.",
+      "category": "out_of_corpus",
+      "dataset_type": "live",
+      "notes": "Negative control test. Evaluation verifies retrieval handles unsupported queries without crashing."
+    }
+  ]
+}

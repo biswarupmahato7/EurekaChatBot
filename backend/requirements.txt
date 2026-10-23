@@ -19,10 +19,12 @@ chromadb>=0.5,<1.0
 # ─── Embeddings (Phase B) ─────────────────────────────────────────────────────
 sentence-transformers>=3.0,<4.0
 
-# ─── Groq LLM client (Phase C) ────────────────────────────────────────────────
-# Use the official Groq Python SDK.
-# Verify the supported model ID from https://console.groq.com/docs/models
-# at deployment time — model availability and names can change.
+# ─── OpenAI LLM client (Phase C - Primary) ───────────────────────────────────
+# Official OpenAI Python SDK for grounded RAG generation (Responses API).
+openai>=1.50.0,<2.0.0
+
+# ─── Groq LLM client (Phase C - Optional Legacy / Fallback) ───────────────────
+# Optional fallback when LLM_PROVIDER=groq is explicitly selected.
 groq>=0.9,<1.0
 
 # ─── Schema validation (shared with crawler) ──────────────────────────────────

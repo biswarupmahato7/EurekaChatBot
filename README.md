@@ -2,212 +2,232 @@
 
 **Project:** Eureka Solutions — Ask Eureka AI  
 **Website:** <https://eurekasolutions.in/Eureka2026/>  
-**Current phase:** Phase 0 — Repository Bootstrap  
-**Python:** 3.11 or newer required
-
-> **Phase 0 scope notice:** The actual crawler, backend API, vector index, and frontend widget will be implemented in Phases A–F. This repository currently contains the clean, reproducible foundation: directory structure, dependency declarations, configuration template, documentation, and a passing smoke test.
-
----
-
-## 1. Project purpose
-
-Ask Eureka AI is a website chatbot that answers visitors' questions using traceable information retrieved from the approved Eureka Solutions website content. Relevant source passages are retrieved from a vector index and used to ground answers generated through Groq's API. Source links are returned alongside every answer.
+**Status:** **Phase F Complete (Production Staging Verified, Awaiting Production Release Gate)**  
+**Python:** 3.11 or newer required  
+**Node.js:** 20.x or 22.x LTS required  
 
 ---
 
-## 2. Repository organization
+## 1. Project Purpose & Architecture
+
+**Ask Eureka AI** is an enterprise-grade website chatbot designed to answer visitors' inquiries using grounded, traceable information retrieved from the approved Eureka Solutions website content.
+
+Answers are strictly grounded in a persistent ChromaDB vector store (3,796 chunks across 102 validated website pages) using dense semantic search (`all-MiniLM-L6-v2`) and generated through OpenAI's official API (`gpt-4o-mini`).
+
+```
+[ Visitor Browser ] ──► [ Edge Nginx / TLS ] ──► [ React 19 Widget ]
+                                                        │
+                                                        ▼ POST /api/v1/chat
+                                              [ FastAPI Backend ]
+                                                        │
+                      ┌─────────────────────────────────┴─────────────────────────────────┐
+                      ▼                                                                   ▼
+       [ Smart Conversation Router ]                                        [ Semantic Retriever ]
+       - Intercepts trivia, food, sports (out_of_scope)                      - ChromaDB (3,796 chunks)
+       - Handles profanity/insults calmly                                   - Cosine relevance threshold
+       - Disambiguation & quick-reply chips                                 - Source diversity cap
+                      │                                                                   │
+                      └─────────────────────────────────┬─────────────────────────────────┘
+                                                        │
+                                                        ▼
+                                              [ OpenAI Client ]
+                                              - Model: gpt-4o-mini
+                                              - Responses API / Chat Completions
+                                              - Bounded retries (30s timeout)
+                                                        │
+                                                        ▼
+                                              [ Grounded Answer ]
+                                              - Verified contact (info@eurekasolutions.in)
+                                              - Sources hidden in UI
+```
+
+---
+
+## 2. Repository Layout
 
 ```text
-eureka-rag-chatbot/          ← project root (this workspace)
-├── crawler/                 # Phase A — web crawler and data pipeline
-│   ├── tests/               # Crawler tests (smoke test runs now)
-│   ├── __init__.py
-│   ├── requirements.txt     # Crawler-only dependencies (no API keys needed)
-│   └── README.md
+eureka-rag-chatbot/
+├── backend/                 # FastAPI service, RAG orchestration, OpenAI client, storage
+│   ├── app/                 # FastAPI application, routers, schemas, middleware, services
+│   ├── embeddings/          # SentenceTransformer & mock embedder adapters
+│   ├── indexing/            # Batch indexing engine, manifest tracking
+│   ├── retrieval/           # Dense semantic retriever, deduplication
+│   ├── vectorstore/         # ChromaDB persistent store adapter
+│   ├── tests/               # Backend unit and integration tests (88 tests)
+│   └── requirements.txt     # Production backend dependencies
 │
-├── backend/                 # Phase B/C — FastAPI service, RAG, Groq integration
-│   ├── requirements.txt     # Backend dependency stub (install in Phase B/C)
-│   └── README.md
+├── crawler/                 # Phase A website crawler and data processing pipeline
+│   ├── cli/                 # CLI entrypoints (crawl, chunk, validate, package)
+│   ├── tests/               # Offline fixture-based crawler tests (143 tests)
+│   └── requirements.txt     # Crawler dependencies
 │
-├── data/                    # Generated data (excluded from Git except .gitkeep)
-│   ├── raw/                 # Crawled JSON output (Phase A)
-│   ├── processed/           # Chunked JSON output (Phase A)
-│   ├── reports/             # Validation and crawl reports (Phase A)
-│   ├── checkpoints/         # Crawler run checkpoints (Phase A)
-│   └── vectorstore/         # ChromaDB persistent index (Phase B)
+├── frontend/                # Phase D/E React 19 + TypeScript + Vite chat widget
+│   ├── src/                 # Widget components, API client, hooks, styles
+│   ├── dist/                # Production distribution bundle
+│   └── package.json         # Frontend dependencies and test scripts
 │
-├── docs/                    # Project documentation
-│   ├── problamStatement.md  # Full product and technical specification (v2.0)
-│   ├── architecture.md      # System architecture document (v2.0)
-│   └── implementation-plan.md  # Phase-by-phase implementation plan (v2.0)
+├── deployment/              # Phase F deployment infrastructure
+│   ├── Dockerfile           # Multi-stage backend container (non-root appuser)
+│   ├── Dockerfile.frontend  # Multi-stage frontend container (Nginx)
+│   ├── docker-compose.yml   # Staging & production multi-service stack
+│   ├── nginx/               # Production Nginx reverse-proxy & TLS configs
+│   └── systemd/             # Linux systemd service unit file
 │
-├── tests/                   # Top-level integration tests (future phases)
-│   └── README.md
+├── data/                    # Generated datasets and persistent storage
+│   ├── raw/                 # eureka_website_data.json (102 pages)
+│   ├── processed/           # eureka_website_chunks.json (3,796 chunks)
+│   ├── vectorstore/         # ChromaDB SQLite & HNSW index files
+│   ├── reports/             # Crawl and indexing validation reports
+│   └── backups/             # Timestamped cryptographic backups
 │
-├── frontend-integration/    # API contract and frontend integration docs
-│   └── README.md
+├── docs/                    # Complete project documentation
+│   ├── DEPLOYMENT.md        # Staging & production deployment guide
+│   ├── OPERATIONS_RUNBOOK.md# Operations, KB refresh, backups, incident runbooks
+│   ├── FINAL_HANDOFF.md     # Final integration and handoff note
+│   ├── TEST_REPORT.md       # Comprehensive evaluation and security report
+│   ├── API_CONTRACT.md      # OpenAPI specification and error schema contract
+│   └── architecture.md      # Detailed system architecture document
 │
-├── .env.example             # Safe configuration template — NEVER commit .env
-├── .gitignore               # Protects secrets, caches, generated data
-├── pytest.ini               # pytest discovery configuration
-├── requirements-dev.txt     # Development and testing tools
-└── README.md                # ← you are here
-```
-
-> **Note on `docs/problamStatement.md`:** The filename contains a typo from the original document (`problamStatement.md` instead of `problemStatement.md`). The file is preserved exactly as named to avoid breaking any existing references. Internally it is the authoritative problem statement document.
-
----
-
-## 3. Supported Python version
-
-**Python 3.11 or newer** (project requirement per problem statement §7.1 and architecture §4.1).
-
-Check your version:
-
-```powershell
-# Windows PowerShell
-python --version
-```
-
-```bash
-# Linux / macOS
-python3 --version
+├── scripts/                 # Maintenance, backup, and release automation
+│   ├── backup_manager.py    # Backup snapshot and isolated restore test utility
+│   ├── package_source.py    # Clean source archive builder
+│   ├── build_index.py       # Safe batch index builder
+│   └── export_openapi.py    # OpenAPI JSON schema exporter
+│
+├── .env.example             # Safe environment configuration template
+├── eureka-rag-source.tar.gz # Verified source code package
+└── eureka-rag-data.zip      # Verified Phase A data package
 ```
 
 ---
 
-## 4. Environment setup
+## 3. Quick Start & Local Setup
 
-### Step 1 — Create and activate a virtual environment
+### Step 1 — Python Virtual Environment
 
 ```powershell
 # Windows PowerShell
 python -m venv .venv
 .\.venv\Scripts\activate
+pip install -r backend/requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 ```bash
 # Linux / macOS
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-### Step 2 — Install development dependencies
-
-```powershell
+pip install -r backend/requirements.txt
 pip install -r requirements-dev.txt
 ```
 
-### Step 3 — Install crawler dependencies
+### Step 2 — Configure Environment Variables
 
 ```powershell
-pip install -r crawler/requirements.txt
-```
-
-### Step 4 — Configure local environment
-
-```powershell
-# Windows PowerShell
 copy .env.example .env
 ```
+Fill in your `OPENAI_API_KEY` in `.env`.
+
+### Step 3 — Launch the Backend Service
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+- Verify health: `http://127.0.0.1:8000/health/ready` (Reports collection: `eureka_website_chunks`, count: 3796).
+
+### Step 4 — Launch the Frontend Widget
 
 ```bash
-# Linux / macOS
-cp .env.example .env
+cd frontend
+npm ci
+npm run dev
 ```
-
-Edit `.env` to set real values. **Never commit `.env` to Git** — it is protected by `.gitignore`.
+Open `http://localhost:5173` in your browser.
 
 ---
 
-## 5. Running the crawler smoke tests (Phase 0 — works now)
+## 4. Automated Testing (401 Tests, 100% Pass Rate)
 
-From the repository root, with the virtual environment activated:
+### Run Backend, Crawler, and Edge-Case Test Suite (337 Tests)
 
 ```powershell
-python -m pytest crawler/tests -v
+.\.venv\Scripts\python.exe -m pytest --tb=short -q
 ```
+*All 337 tests pass in ~2 minutes with zero network calls and zero mock leaks.*
 
-Expected output: all tests pass. The smoke tests verify:
+### Run Frontend Vitest Suite (64 Tests)
 
-- Python version ≥ 3.11
-- The `crawler` package is importable
-- All crawler dependencies (`requests`, `beautifulsoup4`, `pydantic`, `tiktoken`, `python-dotenv`) are installed
-- Standard-library URL utilities are available
-- URL normalization and scope enforcement logic works correctly
-- `tiktoken` loads and counts tokens correctly
-- Pydantic v2 model validation works
-
-These tests require **no network access**, **no API keys**, and **no running backend**.
+```bash
+cd frontend
+npm test
+```
+*All 64 component, accessibility, markdown, and quick-reply tests pass.*
 
 ---
 
-## 6. Phase-by-phase implementation overview
+## 5. Maintenance & Operational Commands
 
-| Phase | Name | Status |
-|-------|------|--------|
-| **0** | Repository Bootstrap | ✅ **Complete** |
-| **A** | Website Data Pipeline (crawler, chunker, validator) | 🔲 Not started |
-| **B** | Retrieval Foundation (embeddings, ChromaDB, index) | 🔲 Not started |
-| **C** | Backend Chatbot (FastAPI, Groq, RAG pipeline) | 🔲 Not started |
-| **D** | Frontend Widget (Ask Eureka AI chat widget) | 🔲 Not started |
-| **E** | Integration and Evaluation (E2E tests, quality) | 🔲 Not started |
-| **F** | Deployment and Handoff (production, runbooks) | 🔲 Not started |
+All data maintenance tasks run **outside user requests** via dedicated CLI scripts:
 
----
-
-## 7. Future phase commands (not yet implemented)
-
-These commands will be available after Phase A is implemented:
-
+### Backup & Isolated Restore Verification
 ```powershell
-# Phase A — Crawl and process
-python scripts/crawl_website.py --max-pages 200
-python scripts/create_chunks.py --target-tokens 500 --overlap-tokens 75
-python scripts/run_pipeline.py --mode full
-python scripts/run_pipeline.py --mode incremental
-python scripts/validate_data.py
+# Create a timestamped backup with SHA-256 manifests
+.\.venv\Scripts\python.exe scripts/backup_manager.py create --tag release
+
+# Execute isolated restore test in a separate sandbox directory
+.\.venv\Scripts\python.exe scripts/backup_manager.py restore-test
 ```
 
+### Safe Knowledge-Base Refresh Workflow
 ```powershell
-# Phase B — Build vector index
-python scripts/build_index.py
+# 1. Incremental Crawl (requires internet)
+.\.venv\Scripts\python.exe -m crawler.cli.crawl_website --incremental
 
-# Phase C — Run the backend API
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+# 2. Validate Raw JSON (100% offline)
+.\.venv\Scripts\python.exe -m crawler.cli.validate_data --raw-only
+
+# 3. Regenerate Chunks (100% offline)
+.\.venv\Scripts\python.exe -m crawler.cli.create_chunks
+
+# 4. Validate Chunks (100% offline)
+.\.venv\Scripts\python.exe -m crawler.cli.validate_data --chunks-only
+
+# 5. Safe Rebuild (pre-computes embeddings before resetting index)
+.\.venv\Scripts\python.exe scripts/build_index.py --rebuild
+
+# 6. Evaluate Retrieval Recall
+.\.venv\Scripts\python.exe -m backend.evaluation.evaluate_retrieval
 ```
 
-Do not run these commands until the respective phases are implemented.
+### Create Distribution Packages
+```powershell
+# Create and verify clean source archive (eureka-rag-source.tar.gz)
+.\.venv\Scripts\python.exe scripts/package_source.py
+
+# Create and verify Phase A data package (eureka-rag-data.zip)
+.\.venv\Scripts\python.exe -m crawler.cli.package_data
+```
 
 ---
 
-## 8. Configuration and API-key security
+## 6. Deployment Environments
 
-- Copy `.env.example` → `.env` for local configuration.
-- **Never commit `.env`** — it is excluded by `.gitignore`.
-- The `GROQ_API_KEY` is a backend-only secret. It must **never** appear in:
-  - Frontend/client-side code or public environment variables
-  - Application logs or error responses
-  - Git history or the handoff ZIP
-- The crawler and its tests require **no API keys**. Configure and run them independently of the backend.
-- See `.env.example` for all configuration options with documentation.
+| Environment | Host Architecture | Documentation Reference |
+|---|---|---|
+| **Local Staging** | Local Uvicorn (port 8000) + Vite (port 5173) | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#4-launching-the-backend-service) |
+| **Docker Compose** | Multi-container stack (Nginx TLS + Backend + Frontend) | [deployment/docker-compose.yml](deployment/docker-compose.yml) |
+| **Linux Host (VM)** | Systemd process manager + Nginx reverse proxy | [deployment/systemd/eureka-backend.service](deployment/systemd/eureka-backend.service) |
 
----
-
-## 9. Project documentation
-
-| Document | Description |
-|----------|-------------|
-| [problamStatement.md](docs/problamStatement.md) | Full product and technical specification (v2.0) |
-| [architecture.md](docs/architecture.md) | System architecture — components, data flow, APIs (v2.0) |
-| [implementation-plan.md](docs/implementation-plan.md) | Phase-by-phase implementation plan (v2.0) |
+For complete operations, disaster recovery, and incident runbooks, see [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md).
 
 ---
 
-## 10. Contributing
+## 7. Security & Privacy Safeguards
 
-- Follow the phase boundaries defined in `docs/implementation-plan.md`.
-- Do not implement later phases prematurely.
-- Never commit real API keys, `.env`, populated vector-store files, or live crawl data.
-- All tests must pass without network access or API keys.
-- Run `python -m pytest crawler/tests -v` before submitting changes to the crawler.
+- **Zero Secret Commits:** Git ignores `.env`, keys, virtual environments, and SQLite databases.
+- **Privacy First:** User query texts are masked from logs at `INFO` level (`LOG_QUERY_TEXT=false`).
+- **Prompt Injection Defense:** Untrusted web text is isolated in `<retrieved_context>` XML tags; system override instructions are refused or neutralized.
+- **SSRF Crawler Guards:** The crawler rejects loopback, RFC 1918 private IPs, and out-of-scope HTTP redirects.
+- **CORS Protection:** Requests are restricted to exact approved origins (`https://eurekasolutions.in`).
+- **Grounded Responses:** Unverified claims and unapproved external links are stripped; absence of facts triggers polite abstention (`insufficient_evidence`).
+- **Verified Contact Channel:** Directs users only to verified email `info@eurekasolutions.in` in Mumbai.

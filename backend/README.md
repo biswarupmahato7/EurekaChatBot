@@ -2,76 +2,153 @@
 
 ## Responsibility
 
-This directory will contain the **FastAPI backend service** for the Eureka RAG Chatbot, implemented in **Phase C**.
+This directory contains the core backend services for the Eureka RAG Chatbot:
+- **Phase B (Complete):** Semantic retrieval foundation, ChromaDB persistent storage, SentenceTransformer embedder, batch index builder, and golden retrieval evaluation.
+- **Phase C (Complete):** FastAPI web service, OpenAI LLM integration (Responses API / Chat Completions, `gpt-4o-mini`), prompt construction, and chat endpoints.
+- **Phase D & E (Complete):** Smart conversation routing, abuse/profanity handling, context-aware clarification with quick-reply options, and comprehensive regression suite.
+- **Phase F (Complete):** Production deployment configurations, containerization, persistent volume mounts, and automated backup/restore verification.
 
-The backend is the **only** component permitted to access the vector store (ChromaDB) and the Groq LLM API. The frontend widget communicates exclusively through the HTTP API exposed by this service — never directly to Groq or ChromaDB.
+The backend is the **only** component permitted to access the vector store (ChromaDB) and LLM APIs. The browser/frontend must never receive database credentials or query ChromaDB/OpenAI directly.
 
-## Current status
+---
 
-**Phase 0 — Dependency stub only.** No backend implementation exists yet.
+## Current Status: Phase F Complete
 
-The dependency manifest (`requirements.txt`) is declared so that the technology stack is documented, but the backend stack is **not installed** during Phase 0. Installation begins in Phase B (embeddings) and Phase C (FastAPI + Groq).
+The **Backend & Retrieval Engine** is fully implemented, verified, and operational:
+- **ChromaDB Persistent Store:** Stored at `./data/vectorstore` (collection: `eureka_website_chunks`, 3,796 records).
+- **Embedding Model:** `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional dense vectors, L2-normalized for cosine similarity).
+- **Index Builder:** Reproducible batch indexing (`scripts/build_index.py`), SHA-256 content-hash skip logic, atomic manifest tracking, and model compatibility guards.
+- **Semantic Retriever:** Configurable top-k retrieval (`TOP_K=6`, same-page concentration cap, optional threshold support).
+- **Primary LLM Client:** OpenAI official SDK (`gpt-4o-mini`, Responses API, 30s timeout, bounded retries).
+- **Smart Conversation Router:** Off-topic/trivia redirection, profanity/insult de-escalation, contact clarification with quick-reply options.
+- **Automated Tests:** 88 unit and integration tests passing in `backend/tests/` (part of 337 total backend/eval tests).
 
-## Intended structure (Phase C onwards)
+---
+
+## Package Structure
 
 ```text
 backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py             # FastAPI application factory and routes
-│   ├── config.py           # Validated Pydantic settings (env vars)
-│   ├── logging_config.py   # Structured logging setup
-│   ├── api/                # Request/response schemas and endpoint handlers
-│   │   ├── __init__.py
-│   │   ├── schemas.py
-│   │   ├── chat.py         # POST /api/v1/chat
-│   │   └── health.py       # GET /health/live, GET /health/ready
-│   ├── rag/                # Scope checks, retrieval, prompt construction, citations
-│   │   └── __init__.py
-│   ├── llm/                # Groq adapter and provider error mapping
-│   │   └── __init__.py
-│   ├── embeddings/         # Embedding model wrapper (load at startup)
-│   │   └── __init__.py
-│   └── vectorstore/        # ChromaDB adapter implementing the storage interface
-│       └── __init__.py
-├── tests/                  # Backend unit and integration tests (Phase C)
-│   └── __init__.py
-├── requirements.txt
-└── README.md
+├── config.py             # Validated Pydantic settings from .env
+├── logging_config.py     # Structured console logging
+├── embeddings/
+│   ├── base.py           # BaseEmbedder abstract interface & text preprocessing
+│   ├── mock_embedder.py  # Deterministic unit-normalized mock embedder for offline tests
+│   └── sentence_transformer_embedder.py  # SentenceTransformers wrapper with model caching
+├── vectorstore/
+│   ├── base.py           # VectorRecord, VectorQueryResult & BaseVectorStore interface
+│   └── chroma_store.py   # ChromaDB persistent client adapter (collection: eureka_website_chunks)
+├── indexing/
+│   ├── manifest.py       # IndexManifest provenance & compatibility tracking
+│   └── index_builder.py  # Batch chunk validation, skip logic, and upsert engine
+├── retrieval/
+│   ├── models.py         # SearchResult & RetrievalResponse contracts
+│   └── retriever.py      # SemanticRetriever with deduplication and thresholding
+├── evaluation/
+│   ├── golden_dataset.json     # Grounded evaluation queries across all required styles
+│   └── evaluate_retrieval.py   # CLI evaluation runner (Recall@k, HitRate@k, MRR)
+├── tests/
+│   ├── fixtures/
+│   │   └── sample_chunks.json  # Offline test fixtures
+│   ├── test_embeddings.py
+│   ├── test_storage.py
+│   ├── test_indexing.py
+│   ├── test_retrieval.py
+│   ├── test_evaluation.py
+│   └── test_phase_boundaries.py
+└── requirements.txt
 ```
 
-## API endpoints (Phase C target)
+---
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health/live` | Liveness — is the process running? |
-| `GET` | `/health/ready` | Readiness — are vector store and config available? |
-| `POST` | `/api/v1/chat` | Main question-answering endpoint |
-| `POST` | `/api/v1/feedback` | Optional thumbs-up/down feedback (if approved) |
+## CLI Commands
 
-See `docs/architecture.md` §6.2 for the full request/response contract.
+### 1. Build / Update the Vector Index
 
-## Installation (Phase B/C)
+Build the ChromaDB vector index from the validated Phase A chunk dataset:
+```bash
+# Standard build (skips unchanged chunks automatically)
+python -m scripts.build_index
 
-```powershell
-# Windows PowerShell — activate your venv first
-pip install -r backend/requirements.txt
+# Specify custom batch size
+python -m scripts.build_index --batch-size 64
+
+# Dry-run validation only (does not write to ChromaDB)
+python -m scripts.build_index --dry-run
+
+# Force full index rebuild / reset
+python -m scripts.build_index --rebuild
+
+# View options
+python -m scripts.build_index --help
 ```
 
-## Security requirements
+### 2. Run Retrieval Evaluation
 
-- `GROQ_API_KEY` must **never** appear in client-side code, logs, Git history, or the handoff ZIP.
-- The vector store must be accessible only by the backend process.
-- CORS must be configured for the exact production frontend origin (see `.env.example` `ALLOWED_ORIGINS`).
+Evaluate retrieval quality against the golden query set:
+```bash
+python -m backend.evaluation.evaluate_retrieval
 
-## What belongs here
+# Evaluate with custom top_k
+python -m backend.evaluation.evaluate_retrieval --top-k 10
+```
 
-- FastAPI application code under `app/`.
-- Backend unit and integration tests under `tests/`.
-- Backend-specific dependency declarations in `requirements.txt`.
+### 3. Query Python Smoke-Test
 
-## What does NOT belong here
+To query the retrieval index directly without any LLM calls:
+```python
+from backend.config import get_backend_settings
+from backend.embeddings.sentence_transformer_embedder import SentenceTransformerEmbedder
+from backend.retrieval.retriever import SemanticRetriever
+from backend.vectorstore.chroma_store import ChromaVectorStore
 
-- Crawler source or scripts — those are in `crawler/`.
-- Frontend widget code — that is in `frontend/` (Phase D) or `frontend-integration/`.
-- Raw or processed JSON datasets — those are generated into `data/`.
+settings = get_backend_settings()
+store = ChromaVectorStore(
+    persist_directory=settings.chroma_persist_directory,
+    collection_name=settings.chroma_collection,
+)
+embedder = SentenceTransformerEmbedder(model_name=settings.embedding_model)
+retriever = SemanticRetriever(vector_store=store, embedder=embedder)
+
+response = retriever.retrieve("What enterprise software solutions does Eureka provide?", top_k=6)
+for res in response.results:
+    print(f"[{res.score:.3f}] {res.page_title} - {res.source_url}")
+    print(f"       {res.text[:120]}...\n")
+```
+
+## Conversational Style Policy & Capability Answers
+
+To ensure the chatbot sounds natural, friendly, direct, and helpful while remaining strictly grounded in the approved Eureka Solutions website corpus, the backend applies the following conversational engineering rules:
+
+### 1. Tone & Natural Voice
+- **Direct & Friendly:** Answers begin with a direct answer in the very first sentence (e.g., *"Yes, Eureka Solutions provides..."*).
+- **Everyday Professional English:** Simple, clear language is favored over corporate jargon or promotional hype.
+- **Zero Robotic Meta-Hedging:** Phrasing such as *"Based on the available website content..."*, *"According to the provided sources..."*, or *"The company positions itself as having significant expertise..."* is strictly forbidden.
+- **Conversational Structure:** Prefers natural paragraphs over reflexive bullet lists. Bullet points are used only when enumerating distinct services or implementation stages.
+- **Forgiving Intent Understanding:** Gracefully interprets informal phrasing, typos (e.g., *"Are they gud at AI solutins?"*), and slang without lecturing or correcting grammar.
+
+### 2. Evidence-Aware Capability Matrix (Cases A–D)
+When asked capability questions (e.g., *"Are they good with AI solutions?"*, *"Have they delivered AI projects before?"*), the system distinguishes between four evidence levels:
+
+| Evidence Level | Scenario | Grounded Response Behavior |
+|---|---|---|
+| **Case A** | Strong, specific project evidence exists | Summarize verified outcomes (e.g., Municipality WhatsApp Service Bot: 50,000 accounts, 70% fewer routine visits) and cite source with confidence. |
+| **Case B** | Service capabilities documented, but no completed case study | Explain what services Eureka Solutions offers (e.g., Agentic AI, AI Strategy, Copilots, IDP), emphasize governance and enterprise integration, clearly note that specific client case studies should be requested from the team, and provide a helpful next step. |
+| **Case C** | Adjacent capabilities documented only | Clarify distinctions honestly (e.g., software engineering and cloud vs. custom quantum chips or hardware manufacturing). |
+| **Case D** | Absent or insufficient evidence | Abstain helpfully or clarify the limitation directly without inventing facts or forcing an unverified "Yes". |
+
+---
+
+## Testing & Quality Assurance
+
+Run all unit, integration, and conversational tone quality tests:
+```bash
+# Run all backend unit and regression tests
+pytest backend/tests/ -v
+
+# Run the 10 conversational tone and capability regression tests
+pytest tests/test_conversational_tone_quality.py -v
+
+# Run full integration suite
+pytest backend/tests/ tests/ -v
+```

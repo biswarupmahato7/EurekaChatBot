@@ -1,0 +1,54 @@
+[
+  {
+    "chunk_id": "test_chunk_001",
+    "page_id": "test_page_alpha",
+    "chunk_index": 0,
+    "source_url": "https://eurekasolutions.in/Eureka2026/services/enterprise-software/erp",
+    "page_title": "Enterprise ERP Solutions | Eureka Solutions",
+    "section_heading": "ERP Capabilities",
+    "heading_path": ["Services", "Enterprise ERP"],
+    "content": "Eureka Solutions delivers custom enterprise ERP software for supply chain management, financial planning, and inventory control.",
+    "token_count": 22,
+    "content_hash": "a1b2c3d4e5f60001",
+    "chunking_version": "1.0"
+  },
+  {
+    "chunk_id": "test_chunk_002",
+    "page_id": "test_page_alpha",
+    "chunk_index": 1,
+    "source_url": "https://eurekasolutions.in/Eureka2026/services/enterprise-software/erp",
+    "page_title": "Enterprise ERP Solutions | Eureka Solutions",
+    "section_heading": "Implementation Approach",
+    "heading_path": ["Services", "Enterprise ERP", "Implementation Approach"],
+    "content": "Our modular implementation strategy minimizes business disruption through phased cloud rollouts and legacy data migration.",
+    "token_count": 20,
+    "content_hash": "a1b2c3d4e5f60002",
+    "chunking_version": "1.0"
+  },
+  {
+    "chunk_id": "test_chunk_003",
+    "page_id": "test_page_beta",
+    "chunk_index": 0,
+    "source_url": "https://eurekasolutions.in/Eureka2026/services/ai-intelligent-automation/chatbots",
+    "page_title": "AI Chatbots & Virtual Assistants | Eureka Solutions",
+    "section_heading": "Conversational AI Overview",
+    "heading_path": ["Services", "AI Automation", "Chatbots"],
+    "content": "Intelligent conversational bots powered by retrieval augmented generation answer complex customer inquiries 24/7.",
+    "token_count": 18,
+    "content_hash": "a1b2c3d4e5f60003",
+    "chunking_version": "1.0"
+  },
+  {
+    "chunk_id": "test_chunk_004",
+    "page_id": "test_page_gamma",
+    "chunk_index": 0,
+    "source_url": "https://eurekasolutions.in/Eureka2026/case-studies/banking-portal",
+    "page_title": "Digital Banking Portal Case Study | Eureka Solutions",
+    "section_heading": "Client Challenge",
+    "heading_path": ["Case Studies", "Banking Portal"],
+    "content": "A regional bank required loan origination automation, regulatory audit trails, and biometric authentication for retail clients.",
+    "token_count": 21,
+    "content_hash": "a1b2c3d4e5f60004",
+    "chunking_version": "1.0"
+  }
+]

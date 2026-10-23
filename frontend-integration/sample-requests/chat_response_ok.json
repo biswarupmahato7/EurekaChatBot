@@ -1,0 +1,18 @@
+{
+  "request_id": "req-3fa85f64e042",
+  "answer": "Eureka Solutions specializes in Oracle NetSuite ERP implementations, Cloud Data Integration, and bespoke software solutions.",
+  "status": "answered",
+  "sources": [
+    {
+      "title": "Oracle NetSuite ERP Services",
+      "url": "https://eurekasolutions.in/Eureka2026/services/netsuite/",
+      "snippet": "Eureka Solutions is an award-winning Oracle NetSuite implementation and customization partner."
+    },
+    {
+      "title": "Cloud Data Integration",
+      "url": "https://eurekasolutions.in/Eureka2026/services/cloud-integration/",
+      "snippet": "Our bespoke Cloud Data Integration platform connects ERP, CRM, and eCommerce platforms seamlessly in real time."
+    }
+  ],
+  "message": null
+}

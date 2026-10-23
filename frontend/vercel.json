@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://YOUR_RAILWAY_BACKEND_URL.up.railway.app/api/:match*"
+    },
+    {
+      "source": "/health/:match*",
+      "destination": "https://YOUR_RAILWAY_BACKEND_URL.up.railway.app/health/:match*"
+    }
+  ]
+}

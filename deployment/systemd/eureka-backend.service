@@ -1,0 +1,38 @@
+[Unit]
+Description=Eureka RAG Chatbot Backend API Service
+After=network.target remote-fs.target
+Documentation=https://github.com/eureka-solutions/eureka-rag-chatbot
+
+[Service]
+Type=simple
+User=eureka
+Group=eureka
+WorkingDirectory=/opt/eureka-rag-chatbot
+EnvironmentFile=/opt/eureka-rag-chatbot/.env
+
+# Execute uvicorn via project virtual environment with 2 workers
+ExecStart=/opt/eureka-rag-chatbot/.venv/bin/uvicorn backend.app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 2 \
+    --proxy-headers \
+    --forwarded-allow-ips "127.0.0.1"
+
+# Restart on unhandled crashes after 5s
+Restart=on-failure
+RestartSec=5s
+
+# Security sandboxing
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/eureka-rag-chatbot/data/vectorstore /opt/eureka-rag-chatbot/data/reports /opt/eureka-rag-chatbot/data/backups
+
+# Standard output and error to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=eureka-rag-backend
+
+[Install]
+WantedBy=multi-user.target
