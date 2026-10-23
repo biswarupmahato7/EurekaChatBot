@@ -18,6 +18,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 # Pre-download and cache embedding model weights in build stage
@@ -46,14 +47,17 @@ COPY --from=builder /opt/hf_cache /opt/hf_cache
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONPATH=/app \
     HF_HOME=/opt/hf_cache \
+    MALLOC_ARENA_MAX=2 \
+    MALLOC_TRIM_THRESHOLD_=100000 \
+    PYTHONMALLOC=malloc \
     OMP_NUM_THREADS=1 \
     MKL_NUM_THREADS=1 \
     OPENBLAS_NUM_THREADS=1 \
     VECLIB_MAXIMUM_THREADS=1 \
     NUMEXPR_NUM_THREADS=1 \
     TOKENIZERS_PARALLELISM=false \
-    PYTHONMALLOC=malloc \
     WEB_CONCURRENCY=1
+
 
 # Create required persistent data directories with non-root ownership
 RUN mkdir -p /app/data/vectorstore \

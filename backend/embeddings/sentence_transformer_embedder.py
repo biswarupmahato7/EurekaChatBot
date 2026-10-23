@@ -34,6 +34,7 @@ class SentenceTransformerEmbedder(BaseEmbedder):
         batch_size: int = 64,
         normalize_embeddings: bool = True,
         preprocessing_version: str = "1.0",
+        lazy_load: bool = True,
     ) -> None:
         super().__init__()
         self._model_name = model_name
@@ -42,8 +43,19 @@ class SentenceTransformerEmbedder(BaseEmbedder):
         self.batch_size = batch_size
         self.normalize_embeddings = normalize_embeddings
         self._preprocessing_version = preprocessing_version
-        self._model = self._load_or_get_cached_model()
-        self._resolved_version = self._detect_model_version()
+        self._model = None
+        self._resolved_version = "unknown"
+        if not lazy_load:
+            self._model = self._load_or_get_cached_model()
+            self._resolved_version = self._detect_model_version()
+
+    @property
+    def model(self) -> Any:
+        """Return initialized SentenceTransformer instance, loading on-demand if deferred."""
+        if self._model is None:
+            self._model = self._load_or_get_cached_model()
+            self._resolved_version = self._detect_model_version()
+        return self._model
 
     @property
     def model_name(self) -> str:
@@ -84,6 +96,7 @@ class SentenceTransformerEmbedder(BaseEmbedder):
         try:
             try:
                 import torch
+                torch.set_grad_enabled(False)
                 torch.set_num_threads(1)
                 try:
                     torch.set_num_interop_threads(1)
@@ -92,7 +105,16 @@ class SentenceTransformerEmbedder(BaseEmbedder):
             except Exception:
                 pass
 
-            model = SentenceTransformer(self.model_name, device=self.device)
+            model = SentenceTransformer(
+                self.model_name,
+                device=self.device,
+                model_kwargs={"low_cpu_mem_usage": True},
+            )
+            model.eval()
+            for param in model.parameters():
+                param.requires_grad = False
+            import gc
+            gc.collect()
 
             # Verify actual dimension
             test_dim = model.get_sentence_embedding_dimension()
@@ -131,8 +153,7 @@ class SentenceTransformerEmbedder(BaseEmbedder):
             return []
 
         preprocessed = [self.preprocess(t) for t in texts]
-        # sentence-transformers handles empty strings, but preprocess ensures clean string
-        embeddings = self._model.encode(
+        embeddings = self.model.encode(
             preprocessed,
             batch_size=self.batch_size,
             show_progress_bar=False,
@@ -147,10 +168,11 @@ class SentenceTransformerEmbedder(BaseEmbedder):
         if not clean_text:
             raise ValueError("Query text cannot be empty or whitespace-only.")
 
-        embedding = self._model.encode(
+        embedding = self.model.encode(
             clean_text,
             show_progress_bar=False,
             normalize_embeddings=self.normalize_embeddings,
             convert_to_numpy=True,
         )
         return embedding.tolist()
+
