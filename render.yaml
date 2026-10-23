@@ -2,7 +2,7 @@ services:
   - type: web
     name: eureka-rag-backend
     runtime: docker
-    dockerfilePath: deployment/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: .
     plan: free
     region: oregon
